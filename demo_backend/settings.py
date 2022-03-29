@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     # demo add
     'rest_framework',
     'app',
-    'corsheaders'
+    'corsheaders',
+    'djcelery',
 ]
 
 MIDDLEWARE = [
@@ -151,3 +152,34 @@ JWT_AUTH = {
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'dist/static'),
 ]
+
+# 邮箱相关
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# 使用qq 邮箱发送邮件
+EMAIL_HOST = 'smtp.qq.com'
+# 邮箱
+EMAIL_HOST_USER = '2950335254@qq.com'
+# 授权码
+EMAIL_HOST_PASSWORD = 'ziuhszgncwefdeie'
+# 端口
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_FROM = '2950335254@qq.com'  # 需要和邮箱号码一致
+
+# celery 配置
+import djcelery
+
+djcelery.setup_loader()
+# 使用rabbitmq 作为任务代理 (broker)
+
+BROKER_URL = "amqp://"
+
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'  # 定时任务.
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'  # 需要跟踪任务的状态时保存结果和状态
+CELERY_ENABLE_UTC = False  # 不用UTC.
+CELERY_TIMEZONE = 'Asia/Shanghai'  # 指定上海时区
+CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']  # 允许的格式
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_IGNORE_RESULT = True
+

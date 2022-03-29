@@ -21,7 +21,7 @@
       title="新增模板"
       :visible.sync="outerVisible"
       width="30%">
-      <el-form ref="form" :model="form" label-width="80px" :rules="rule_for_new">
+      <el-form ref="form" :model="temp" label-width="80px" :rules="rule_for_new">
         <el-form-item label="模板名称" prop="title">
           <el-input v-model="temp.title"></el-input>
         </el-form-item>
@@ -204,6 +204,7 @@ export default {
       },
       // 修改用的
       temp_data: {
+        user:'',
         title: '',
         remark: '',
         range: '',
@@ -292,12 +293,10 @@ export default {
           item.content = ''
           for (let i = 0; i < obj.length; i++) {
             for (let key in obj[i]) {
-              // console.log(key, obj[i][key])
               item.content += obj[i][key] + ' '
             }
             item.content += ' ### '
           }
-          // console.log(JSON.parse(item.content))
           if (item['range'] == 0) {
             item['range'] = '仅自己可见'
           }
@@ -314,7 +313,6 @@ export default {
             item['create_time'] = item['create_time'].slice(0,19)
           }
         }) 
-        // console.log(this.tableData)
       }).catch(error => {
         console.log(error.response)
       })  
@@ -369,11 +367,13 @@ export default {
     },
     // 修改模板
     ChangeTaskTemplate() {
+      this.temp_data.user = window.localStorage.username
       if(this.temp_data.title === '')
         this.temp_data.title = this.change_temp.title
       if(this.temp_data.remark === '')
         this.temp_data.remark = this.change_temp.remark   
       this.temp_data.update_time = this.nowDate
+      // console.log(this.temp_data)
 
       changeTaskTemplate(this.change_temp.id,this.temp_data).then(response => {
         this.loadTaskTemplates()
@@ -386,6 +386,7 @@ export default {
           this.$message.error("修改失败！")
         })
       // 清空状态
+      this.temp_data.user = ''
       this.temp_data.title = ''
       this.temp_data.remark = ''
       this.temp_data.update_time = ''

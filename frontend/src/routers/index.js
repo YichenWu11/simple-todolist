@@ -13,6 +13,10 @@ import Login from "../pages/Login"
 // 路由表
 const routes = [
     {
+        path:'*',
+        redirect: "/login"
+    },
+    {
         path: '/login',
         component: Login,
     },
@@ -23,10 +27,6 @@ const routes = [
     {
         path: '/task-template',
         component: Task_Template
-    },
-    {
-        path:'*',
-        redirect: "/login"
     },
 ]
 

@@ -9,6 +9,8 @@ export const login = (data) => axios({url:'http://localhost:8000/api/authorizati
 // 注册
 export const register = (data) => axios({url:'http://localhost:8000/api/myuser/',method:'post',data})
 
+// 发送邮件 (只传一个id)(传递params参数)
+export const sendEmail = (id) => axios({url:'http://127.0.0.1:8000/api/sendemail/',method:'post',params:{id:id}})
 
 // tasks
 // 获取任务列表

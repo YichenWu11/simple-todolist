@@ -8,7 +8,7 @@
         class="exit-btn" 
         @click="logout" 
         v-if="$route.fullPath != '/login'">
-        登出
+        退出
       </el-button>
     </div>
     <div class="main" >

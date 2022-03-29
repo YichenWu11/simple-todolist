@@ -1,4 +1,3 @@
-from django.conf.urls import url
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_jwt.views import obtain_jwt_token
@@ -13,6 +12,7 @@ router.register(r'myuser', views.MyUserViewSet)
 
 urlpatterns = [
     path(r"authorizations/", obtain_jwt_token),  # drf自带的登陆验证
+    path(r"sendemail/", views.EmailView.as_view()),
 ]
 
 urlpatterns += router.urls

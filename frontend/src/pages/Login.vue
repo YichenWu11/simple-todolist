@@ -1,29 +1,35 @@
 <template>
     <div style="margin-top:120px" class="main">
-        <el-form :rules="rules">
-            <el-form-item label="用户名" prop="name">
-                <el-input v-model="username"></el-input>
+        <el-form :rules="rules_for_login" :model="this">
+            <el-form-item 
+            label="用户名" 
+            prop="username">
+                <el-input v-model="username" ></el-input>
             </el-form-item>
-            <el-form-item label="密码" prop="pwd">
+            <el-form-item label="密码" prop="password">
                 <el-input v-model="password" type="password"></el-input>
             </el-form-item>
-            <el-button plain @click=Login type="primary">登录</el-button>
-            <el-button plain @click=open type="primary" style="margin-left:80px;">注册</el-button>
+            <el-form>
+                <el-button plain @click=Login type="primary">登录</el-button>
+                <el-button plain @click=open type="primary" style="margin-left:80px;">注册</el-button>
+            </el-form>    
         </el-form>
+
+        
 
         <!-- 注册用的dialog -->
         <el-dialog
         title="提示"
         :visible.sync="dialogVisible"
         width="30%">
-        <el-form :rules="rules_re">
-            <el-form-item label="用户名" prop="name">
+        <el-form :rules="rules_re" :model="form">
+            <el-form-item label="用户名" prop="username">
                 <el-input v-model="form.username"></el-input>
             </el-form-item>
             <el-form-item label="邮箱" prop="email">
                 <el-input v-model="form.email"></el-input>
             </el-form-item>
-            <el-form-item label="密码" prop="pwd">
+            <el-form-item label="密码" prop="password">
                 <el-input v-model="form.password" type="password"></el-input>
             </el-form-item>
         </el-form>
@@ -39,7 +45,7 @@
 
 <script>
 import { login, register } from '../api/api'
-// TODO:写路由守卫
+
 export default {
     name:'Login',
     data() {
@@ -47,23 +53,24 @@ export default {
             dialogVisible: false,
             username:'',
             password:'',
-            rules: {
-                name: [
+            rules_for_login: {
+                username: [
                     { required: true, message: '请输入用户名', trigger: 'blur' },
+                    { max: 20,  message: '长度不超过20个字符', }
                 ],
-                pwd: [
+                password: [
                     { required: true, message: '请输入密码', trigger: 'blur' },
                 ],         
             },
             rules_re: {
-                name: [
+                username: [
                     { required: true, message: '请输入用户名', trigger: 'blur' },
                 ],
-                pwd: [
+                password: [
                     { required: true, message: '请输入密码', trigger: 'blur' },
                 ],   
                 email: [
-                    { required: true, message: '请输入邮箱', trigger: 'blur' },
+                    { required: true, message: '请输入邮箱', trigger: 'blur', validator: 'checkEmail'  },
                     { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }
                 ]      
             },
@@ -72,12 +79,26 @@ export default {
                 username:'',
                 password: '',
                 email:'',
-            }
+            },
         }
     },
     methods: {
+        checkEmail(rule, value, callback) {
+            const mailReg = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(.[a-zA-Z0-9_-])+/
+            if (!value) {
+            return callback(new Error('邮箱不能为空'))
+            }
+            setTimeout(() => {
+            if (mailReg.test(value)) {
+                callback()
+            } else {
+                callback(new Error('请输入正确的邮箱格式'))
+            }
+            }, 100)
+        },
         Login() {
             login({'username':this.username, 'password':this.password}).then(response => {
+                // console.log(response.data)
                 sessionStorage.clear()
                 localStorage.token = response.data.token
                 localStorage.username = response.data.username
@@ -109,7 +130,6 @@ export default {
         },
         open() {
             this.dialogVisible = true
-
         },
         close() {
             this.dialogVisible = false
@@ -123,7 +143,7 @@ export default {
                 password: '',
                 email:'',
             }
-        }
+        },
     }
 }
 

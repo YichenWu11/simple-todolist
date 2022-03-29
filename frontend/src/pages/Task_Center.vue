@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div style="padding: 0;margin: -40px auto 0 -106px;">
+    <div style="padding: 0;margin: -40px auto 0 -90px;">
       <el-button plain @click="dialogVisible = true">新增任务</el-button>
       <el-button plain @click=showTaskTemplates>导入模板任务</el-button>
     </div>
@@ -92,7 +92,7 @@
           fit
           border
           stripe
-          style="width: 1350px">
+          style="width: 1370px">
         <el-table-column
             align="center"
             prop="title"
@@ -135,7 +135,7 @@
             label="创建时间"
             width="200">
         </el-table-column>
-        <el-table-column label="操作" width="280" align="center">
+        <el-table-column label="操作" width="300" align="center">
           <template slot-scope="scope">
             <el-button
                 size="mini"
@@ -149,8 +149,7 @@
                 size="mini"
                 type="warning"
                 @click=RejectTask(scope.row)
-                :disabled="scope.row.state==='已拒绝'"
-            >拒绝
+            >{{ scope.row.state==='已拒绝' ? "取消拒绝" : "拒绝" }}
             </el-button>
             <el-button
                 size="mini"
@@ -229,6 +228,7 @@
         <li 
         v-for="(item,index) in temp_array" 
         :key="index" 
+        v-show="item.range===1 || item.user === username"
         style="list-style-type:none;margin:30px 100px 30px 120px;padding:0;">
           <el-button style="width:80%;" @click=showTasks(item)>{{ item.title }}</el-button>
         </li>
@@ -245,12 +245,13 @@
 
 <script>
 // 引入接口 (最后一个为获取任务模板列表的接口)
-import {getTasks, postTask, changeTaskState, deleteTask, changeTask, getTaskTemplates} from "../api/api"
+import {getTasks, postTask, changeTaskState, deleteTask, changeTask, getTaskTemplates, sendEmail} from "../api/api"
 
 export default {
   name: "Task_Center",
   data() {
     return {
+      username:window.localStorage.username,
       nowDate: "", // 当前日期
       time: '', // 创建任务时用来拼接的时间
       change_time: '', // 修改任务时用来拼接的时间
@@ -397,16 +398,14 @@ export default {
           message: '计划完成时间不能早于当前时间！',
           type: 'warning'
         }) 
-        // 清空状态
-        this.dialogVisible = false
-        this.form.title = ''
-        this.form.content = ''
-        this.form.planning_finish_time = ''
-        this.time = ''
         return ;       
       }
       // 创建任务
       postTask(this.form).then(response => {
+        // 开启异步任务
+        sendEmail(response.data.id).then(response => {
+        })
+        // console.log(response.data.id)
         this.loadTasks()
         this.$message({
           message: '任务创建成功！',
@@ -424,11 +423,16 @@ export default {
       this.time = ''
     },
     cancel_task() {
-      this.dialogVisible = false
       this.$message({
         message: '已取消创建',
         type: 'info'
       })
+      // 清空状态
+      this.dialogVisible = false
+      this.form.title = ''
+      this.form.content = ''
+      this.form.planning_finish_time = ''
+      this.time = ''
     },
 
     // 完成任务
@@ -467,8 +471,9 @@ export default {
       }
     },
 
-    // 拒绝任务
+    // 拒绝任务 或 取消拒绝任务
     RejectTask(data) {
+      // 拒绝任务
       if(data.state == '未完成') {
         this.$confirm('确认拒绝?', '提示', {
           confirmButtonText: '确定',
@@ -476,6 +481,7 @@ export default {
           type: 'warning'
         }).then(() => {
           changeTaskState(data.id, {'state':3}).then(response => {
+          this.reject = "取消拒绝"
           this.loadTasks()
           this.$message({
             message: '任务已拒绝！可点击修改对任务进行备注',
@@ -491,18 +497,35 @@ export default {
           });          
         });
       }
+      else if(data.state == '已拒绝') {
+        this.$confirm('确认取消拒绝?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          changeTaskState(data.id, {'state':0}).then(response => {
+            this.reject = "拒绝"
+            this.loadTasks()
+            this.$message({
+              message: '任务已取消拒绝！可点击修改对任务进行备注',
+              type: 'warning'
+            })
+          }).catch(error => {
+            console.error(error.response)
+          })
+          }).catch(() => {
+            this.$message({
+              type: 'info',
+              message: '已取消'
+            });          
+          })  
+      }   
       else if(data.state == "已完成" || data.state == "延期完成"){
         this.$message({
           message: '任务已完成,请勿点击',
           type: 'info'
         })
-      }
-      else if(data.state == "已拒绝"){
-        this.$message({
-          message: '任务已拒绝,请勿点击',
-          type: 'info'
-        })
-      }
+      } 
     },
 
     // 删除任务
@@ -630,13 +653,6 @@ export default {
             message: '计划完成时间不能早于现在!',
             type: 'warning'
           })
-          // 清空状态
-          this.time_array = []
-          this.task_array = []
-          this.temp_array = []
-          // 关闭dialog
-          this.innerVisible = false
-          this.outerVisible = false
           return ;
         }
         // 创建任务
@@ -665,6 +681,7 @@ export default {
       this.time_array = []
       this.task_array = []
       this.temp_array = []
+
       this.$message({
         message: '已取消创建',
         type: 'info'
@@ -688,6 +705,10 @@ export default {
 
 <style scoped>
   .task-center {
-    margin: 20px 0 0 -106px;
+    margin: 20px 0 0 -90px;
   }
+
+  .el-table--scrollable-x ::-webkit-scrollbar {
+    display: none;
+  } 
 </style>
