@@ -2,7 +2,11 @@ import Vue from 'vue'
 import Axios from "axios"
 
 const axiosInstance = Axios.create({
-    withCredentials: true
+    withCredentials: true,
+    //基础路径
+    baseURL: "http://localhost:8000/",
+    //请求不能超过10S
+    timeout: 10000,
 })
 
 // 通过拦截器处理csrf问题，这里的正则和匹配下标可能需要根据实际情况小改动

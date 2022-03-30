@@ -44,7 +44,6 @@ router.beforeEach(async (to, from, next) => {
     //next: next() 放行  next(path) 放行
     //方便测试 统一放行
     let token = window.localStorage.token
-    let name = window.localStorage.username
     // 已登录
     if (token != '') {
         if (to.path === '/login') {

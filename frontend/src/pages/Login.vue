@@ -11,7 +11,7 @@
             </el-form-item>
             <el-form>
                 <el-button plain @click=Login type="primary">登录</el-button>
-                <el-button plain @click=open type="primary" style="margin-left:80px;">注册</el-button>
+                <el-button plain @click="dialogVisible = true" type="primary" style="margin-left:80px;">注册</el-button>
             </el-form>    
         </el-form>
 
@@ -113,12 +113,12 @@ export default {
             })
         },
         Register() {
-            register(this.form).then(response => {
+            register(this.form).then(() => {
                 this.$message({
                     message: '注册成功!',
                     type:'success'
                 })
-            }).catch(error => {
+            }).catch(() => {
                 this.$message.error("注册失败!")
             })
             this.dialogVisible = false
@@ -128,16 +128,13 @@ export default {
                 email:'',
             }
         },
-        open() {
-            this.dialogVisible = true
-        },
         close() {
-            this.dialogVisible = false
             this.$message({
                 message: '已取消注册',
                 type: 'info'
             })
             // 清空状态
+            this.dialogVisible = false
             this.form = {
                 username:'',
                 password: '',
@@ -157,5 +154,5 @@ export default {
         border: 1px solid lightgray;
         border-radius:5px;
     }
-
+    
 </style>

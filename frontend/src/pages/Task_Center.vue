@@ -1,5 +1,6 @@
 <template>
   <div>
+    <!-- 功能按钮 -->
     <div style="padding: 0;margin: -40px auto 0 -90px;">
       <el-button plain @click="dialogVisible = true">新增任务</el-button>
       <el-button plain @click=showTaskTemplates>导入模板任务</el-button>
@@ -358,18 +359,9 @@ export default {
         // console.log(this.tableData)
         this.tableData.forEach(function(item){
           // 处理
-          if (item['state'] == 0) {
-            item['state'] = '未完成'
-          }
-          else if (item['state'] == 1) {
-            item['state'] = '已完成'
-          }
-          else if (item['state'] == 2) {
-            item['state'] = '延期完成'
-          }
-          else if (item['state'] == 3) {
-            item['state'] = '已拒绝'
-          }
+          let obj = {0:"未完成", 1:"已完成", 2:"延期完成", 3:"已拒绝"}
+          item.state= obj[item.state]
+          // 处理时间（去掉 T 和 Z）
           if(item['planning_finish_time']) {
             item['planning_finish_time'] = item['planning_finish_time'].replace('T',' ')
             item['planning_finish_time'] = item['planning_finish_time'].replace('Z',' ')
@@ -384,6 +376,7 @@ export default {
             item['create_time'] = item['create_time'].slice(0,19)
           }
         })
+        // 筛选任务
         this.tableData = this.tableData.filter((item)=>(item.user === window.localStorage.username))
       })
     },
@@ -403,9 +396,8 @@ export default {
       // 创建任务
       postTask(this.form).then(response => {
         // 开启异步任务
-        sendEmail(response.data.id).then(response => {
-        })
-        // console.log(response.data.id)
+        sendEmail(response.data.id)
+        // 重新加载任务
         this.loadTasks()
         this.$message({
           message: '任务创建成功！',
@@ -438,34 +430,18 @@ export default {
     // 完成任务
     FinishTask(data) {
       if(data.state == '未完成') {
-        let post_state = 1
-        if (Date.parse(data.planning_finish_time) < Date.now())
-          post_state = 2
-        changeTaskState(data.id, {'state':post_state,'actual_finish_time':this.nowDate}).then(response => {
+        let post_state = ( Date.parse(data.planning_finish_time) < Date.now() ) ? 2 : 1
+        changeTaskState(data.id, {'state':post_state,'actual_finish_time':this.nowDate}).then(() => {
           this.loadTasks()
-          if (post_state == 1) {
-            this.$message({
-              message: '任务已完成！可点击修改对任务进行备注',
-              type: 'success'
-            })  
-          }
-          else if (post_state == 2) {
-            this.$message({
-              message: '任务延期完成,可点击修改对任务进行备注',
-              type: 'info'
-            })  
-          }
+          this.$message({
+            message: ( (post_state==1) ? "任务已完成！" : "任务延期完！" ) + '可点击修改对任务进行备注',
+            type: 'success'
+          })  
         })
       }
-      else if(data.state == "已完成"){
+      else {
         this.$message({
-          message: '任务已完成,请勿点击',
-          type: 'info'
-        })
-      }
-      else if(data.state == "已拒绝"){
-        this.$message({
-          message: '任务已拒绝,请勿点击',
+          message: ( (data.state == "已完成")? "任务已完成，" : "任务已拒绝，" ) + '请勿点击',
           type: 'info'
         })
       }
@@ -480,8 +456,10 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          changeTaskState(data.id, {'state':3}).then(response => {
+          // 确认
+          changeTaskState(data.id, {'state':3}).then(() => {
           this.reject = "取消拒绝"
+          // 重新加载任务
           this.loadTasks()
           this.$message({
             message: '任务已拒绝！可点击修改对任务进行备注',
@@ -491,6 +469,7 @@ export default {
             console.error(error.response)
           })
         }).catch(() => {
+          // 取消
           this.$message({
             type: 'info',
             message: '已取消删除'
@@ -503,7 +482,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          changeTaskState(data.id, {'state':0}).then(response => {
+          changeTaskState(data.id, {'state':0}).then(() => {
             this.reject = "拒绝"
             this.loadTasks()
             this.$message({
@@ -535,7 +514,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        deleteTask(id).then(response => {
+        deleteTask(id).then(() => {
           this.loadTasks()
           this.$message({
             message: '已删除',
@@ -552,15 +531,16 @@ export default {
 
     // 修改任务
     ChangeTask() {
+      // 如果可以修改任务的名称和内容
       if (this.can_change) {
         if (this.change_form.title == '')
           this.change_form.title = this.change_data.title
+        // 如果有时间的输入内容则拼接时间
         if (this.change_form['planning_finish_time'] != '' && this.change_time != '') {
           this.change_form['planning_finish_time'] += ' ' + this.change_time
-          this.change_form['planning_finish_time'] = this.change_form['planning_finish_time']
         }
         else
-          this.change_form['planning_finish_time'] = this.change_data.planning_finish_time.slice(0,19)
+          this.change_form['planning_finish_time'] = this.change_data.planning_finish_time.slice(0,19)  // 给时间切片（只取年月日时分秒）
         if (this.change_form['content'] == '')
           this.change_form['content'] = this.change_data.content
         if (this.change_form['remark'] == '')
@@ -583,26 +563,30 @@ export default {
           this.can_change = true
           return ;       
         }
-        changeTask(this.change_data.id, this.change_form).then(response => {
+        // 满足要求，则发送改变任务参数的请求
+        changeTask(this.change_data.id, this.change_form).then(() => {
           this.loadTasks()
           this.$message({
             message: '修改成功',
             type: 'success'
           })
-        }).catch(error => {
+        }).catch(() => {
           this.$message.error('修改失败！')
         })        
       }
+      // 如果不可以修改任务的名称和内容，只能修改任务的备注
       else {
         if (this.change_form['remark'] === null) 
           this.change_form['remark'] = ''
-        changeTask(this.change_data.id, {'remark':this.change_form['remark']}).then(response => {
+        // 发送请求
+        changeTask(this.change_data.id, {'remark':this.change_form['remark']}).then(() => {
+          // 重新加载任务
           this.loadTasks()
           this.$message({
             message: '修改成功！',
             type: 'success'
           })
-        }).catch(error => {
+        }).catch(() => {
           // console.log(error.response)
           this.$message.error('修改失败！')
         })         
@@ -617,37 +601,37 @@ export default {
       this.editVisible = false
       this.can_change = true
     },
+    // 为修改任务参数做提前准备，在[修改]或[取消修改]按钮 onclick 时调用
     change(data) {
+      // 保存下来即将被修改的任务的原始数据
       this.change_data = data
       this.editVisible = true
       if (this.change_data.state === '已完成' || this.change_data.state === '已拒绝' || this.change_data.state === '延期完成')
         this.can_change = false
       else
         this.can_change = true
-      // console.log(JSON.stringify(this.change_data))
     },
 
     // 展示模板信息
     showTaskTemplates() {
+      // 发送get请求
       getTaskTemplates().then(response => {
         this.temp_array = response.data
         this.outerVisible = true
-        for(let i = 0; i < this.temp_array.length; i++) {
-          this.time_array.push('')
-        }
+        for(let i = 0; i < this.temp_array.length; i++)
+          this.time_array.push('')  // 提前准备好用来展示选定模板任务的任务列表
       })
     },
     // 展示模板中包含的任务（存在 task_array 中）
     showTasks(item) {
       this.task_array = JSON.parse(item.content)
       this.innerVisible = true
-      // console.log(this.task_array)
     },
-    // 确认创建（创建任务）
+    // 确认创建（根据选定模板中包含的任务内容创建任务）
     ensure_create() {
       for(let i = 0; i < this.task_array.length; i++) {
-        // 拼接时间
-        this.task_array[i].planning_finish_time += ' ' + this.time_array[i]
+        this.task_array[i].planning_finish_time += ' ' + this.time_array[i]  // 拼接时间
+        // 其中包含的任何一个任务的计划完成时间都不能早于现在
         if (Date.parse(this.task_array[i].planning_finish_time) < Date.now()) {
           this.$message({
             message: '计划完成时间不能早于现在!',
@@ -656,7 +640,7 @@ export default {
           return ;
         }
         // 创建任务
-        postTask(this.task_array[i]).then(response => {
+        postTask(this.task_array[i]).then(() => {
           this.loadTasks()
         }).catch(error => {
           console.log(error.response.data)
@@ -681,7 +665,6 @@ export default {
       this.time_array = []
       this.task_array = []
       this.temp_array = []
-
       this.$message({
         message: '已取消创建',
         type: 'info'
@@ -692,6 +675,7 @@ export default {
     this.currentTime()
   },
   created() {
+    // 加载展示的任务列表
     this.loadTasks()
   },
   // 销毁定时器

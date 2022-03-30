@@ -2,7 +2,7 @@
   <div>
     <!-- 功能按钮 -->
     <div style="padding: 0;margin: -40px auto 0 -106px;">
-      <el-button plain @click="open">新增模板</el-button>
+      <el-button plain @click="outerVisible = true">新增模板</el-button>
       <!-- 搜索框 -->
       <el-input 
         v-model="input" 
@@ -172,19 +172,18 @@ export default {
   name: "Task_Template",
   data() {
     return {
-      username:'',
+      username:'',  // 登陆时存储的用户名称
       input: '',  // 用来搜索
       nowDate: "", // 当前日期
       outerVisible: false,  // 控制创建模板外层dialog
       innerVisible: false, // 控制创建模板内层dialog
       editVisible: false, // 控制修改模板dialog
-      input: '',
       // 任务模板列表的展示内容
       tableData: [],
       // 创建新模板时候使用的数据
       time:'', // 用来拼接
       task_array:[],
-      task_num:0,
+      task_num:0,  // 创建模板时选择的模板中包含的任务数量，初始默认为0
       // 空任务
       form: {
         title:'',
@@ -213,6 +212,7 @@ export default {
       change_temp: {
 
       },
+      // 表单校验规则
       rule_for_new: {
         title: [
             { required: true, message: '请输入任务名称', trigger: 'blur' },
@@ -250,20 +250,17 @@ export default {
       let second = date.getSeconds(); // 秒
       second = second < 10 ? "0" + second : second; // 如果只有一位，则前面补零
       this.nowDate = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
-    },    
-    open() {
-      this.outerVisible = true
-    },
+    },  
+
     // 根据任务数目创建好task_array
     edit() {
       for (let i = 0; i < this.task_num; i++) {
-        let objCopy = {};
+        let objCopy = {}  // 用来拷贝form
         for (let i in this.form) {
-            objCopy[i] = this.form[i];
+            objCopy[i] = this.form[i]
         }
         this.task_array.push(objCopy)
       }
-      // this.task_array = []
       this.innerVisible = true
     },
     // 外层dialog取消
@@ -281,8 +278,10 @@ export default {
       this.temp.remark = ''
       this.temp.range = 0
     },
+
     // 加载任务模板列表
     loadTaskTemplates() {
+      // 发送请求获取任务模板列表
       getTaskTemplates().then(response => {
         this.tableData = response.data
         this.tableData = this.tableData.filter((item) => (item.user === window.localStorage.username || item.range === 1))  
@@ -292,17 +291,13 @@ export default {
           let obj = JSON.parse(item.content)
           item.content = ''
           for (let i = 0; i < obj.length; i++) {
-            for (let key in obj[i]) {
+            for (let key in obj[i])
               item.content += obj[i][key] + ' '
-            }
             item.content += ' ### '
           }
-          if (item['range'] == 0) {
-            item['range'] = '仅自己可见'
-          }
-          else if (item['range'] == 1) {
-            item['range'] = '所有人可见'
-          }
+          let obj_range = {0:"仅自己可见", 1:"所有人可见"}
+          item.range = obj_range[item.range]
+          // 时间格式处理（及切片）
           if(item['update_time']) {
             item['update_time'] = item['update_time'].replace('T',' ')
             item['update_time'] = item['update_time'].replace('Z',' ')
@@ -317,11 +312,13 @@ export default {
         console.log(error.response)
       })  
     },
+
     // 创建模板
     createTaskTemplate() {
       this.temp.user = window.localStorage.username
       this.temp.content = JSON.stringify(this.task_array)
-      postTaskTemplate(this.temp).then(response => {
+      // 发送请求
+      postTaskTemplate(this.temp).then(() => {
         this.loadTaskTemplates()
         this.$message({
           message: '任务创建成功!',
@@ -341,6 +338,7 @@ export default {
         this.$message.error("任务创建失败!")
       })
     },
+
     // 删除模板
     DeleteTaskTemplate(id) {
       this.$confirm('确认删除?', '提示', {
@@ -348,7 +346,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        deleteTaskTemplate(id).then(response => {
+        deleteTaskTemplate(id).then(() => {
           this.loadTaskTemplates()
           this.$message({
             message:'任务删除成功!',
@@ -365,6 +363,7 @@ export default {
         });          
       });      
     },
+
     // 修改模板
     ChangeTaskTemplate() {
       this.temp_data.user = window.localStorage.username
@@ -373,9 +372,8 @@ export default {
       if(this.temp_data.remark === '')
         this.temp_data.remark = this.change_temp.remark   
       this.temp_data.update_time = this.nowDate
-      // console.log(this.temp_data)
-
-      changeTaskTemplate(this.change_temp.id,this.temp_data).then(response => {
+      // 发送请求
+      changeTaskTemplate(this.change_temp.id,this.temp_data).then(() => {
         this.loadTaskTemplates()
         this.$message({
           message:'修改成功',
@@ -397,16 +395,17 @@ export default {
       this.change_temp = data
       this.editVisible = true
     },
+
     // 搜索功能
     search() {
-      // console.log(JSON.parse(this.tableData[2].content))
       this.tableData = this.tableData.filter((item) => {
         return item.title.indexOf(this.input) != -1
       })
       if (this.input == '')
         this.loadTaskTemplates()
     },
-    // 展示我的模板
+
+    // 只展示我创建的的模板
     showMyTemps() {
       getTaskTemplates().then(response => {
         this.tableData = response.data
@@ -421,18 +420,13 @@ export default {
           item.content = ''
           for (let i = 0; i < obj.length; i++) {
             for (let key in obj[i]) {
-              // console.log(key, obj[i][key])
               item.content += obj[i][key] + ' '
             }
             item.content += ' ### '
           }
-          // console.log(JSON.parse(item.content))
-          if (item['range'] == 0) {
-            item['range'] = '仅自己可见'
-          }
-          else if (item['range'] == 1) {
-            item['range'] = '所有人可见'
-          }
+          let obj_range = {0:"仅自己可见", 1:"所有人可见"}
+          item.range = obj_range[item.range]
+          // 时间处理（及切片）
           if(item['update_time']) {
             item['update_time'] = item['update_time'].replace('T',' ')
             item['update_time'] = item['update_time'].replace('Z',' ')
@@ -443,12 +437,12 @@ export default {
             item['create_time'] = item['create_time'].slice(0,19)
           }
         }) 
-        // console.log(this.tableData)
       }).catch(error => {
         console.log(error.response)
       })  
     },
-    // 展示其他人的模板
+
+    // 只展示其他人创建的模板
     showOtherTemps() {
       getTaskTemplates().then(response => {
         this.tableData = response.data
@@ -463,18 +457,13 @@ export default {
           item.content = ''
           for (let i = 0; i < obj.length; i++) {
             for (let key in obj[i]) {
-              // console.log(key, obj[i][key])
               item.content += obj[i][key] + ' '
             }
             item.content += ' ### '
           }
-          // console.log(JSON.parse(item.content))
-          if (item['range'] == 0) {
-            item['range'] = '仅自己可见'
-          }
-          else if (item['range'] == 1) {
-            item['range'] = '所有人可见'
-          }
+          let obj_range = {0:"仅自己可见", 1:"所有人可见"}
+          item.range = obj_range[item.range]
+          // 时间处理（及切片）
           if(item['update_time']) {
             item['update_time'] = item['update_time'].replace('T',' ')
             item['update_time'] = item['update_time'].replace('Z',' ')
@@ -485,7 +474,6 @@ export default {
             item['create_time'] = item['create_time'].slice(0,19)
           }
         }) 
-        // console.log(this.tableData)
       }).catch(error => {
         console.log(error.response)
       })  
