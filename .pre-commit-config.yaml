@@ -1,6 +1,16 @@
+default_stages:
+- commit
+default_language_version:
+  python: python3.6.8
 repos:
 - repo: https://github.com/YichenWu11/simple-todolist
   rev: stable
   hooks:
-    - id: wuyichen
-      language_version: python3.6.8
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-yaml
+  - id: check-symlinks
+  - id: check-merge-conflict
+  - id: check-json
+  - id: check-added-large-files
+    args: [--maxkb=51200]
