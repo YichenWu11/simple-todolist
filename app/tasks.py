@@ -36,4 +36,3 @@ def send_email(task_id):
                 to_who = chosen[0].user.email
                 send_mail(subject, message, from_who, [to_who])
     logger.info("执行成功")
-
