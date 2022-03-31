@@ -283,8 +283,7 @@ export default {
     loadTaskTemplates() {
       // 发送请求获取任务模板列表
       getTaskTemplates().then(response => {
-        this.tableData = response.data
-        this.tableData = this.tableData.filter((item) => (item.user === window.localStorage.username || item.range === 1))  
+        this.tableData = response.data 
         // 处理数据
         this.tableData.forEach(function(item){
           // 处理
@@ -346,7 +345,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        deleteTaskTemplate(id).then(() => {
+        deleteTaskTemplate(id,{token:window.localStorage.token}).then(() => {
           this.loadTaskTemplates()
           this.$message({
             message:'任务删除成功!',
@@ -366,12 +365,13 @@ export default {
 
     // 修改模板
     ChangeTaskTemplate() {
-      this.temp_data.user = window.localStorage.username
+      this.temp_data.user = window.localStorage.token
       if(this.temp_data.title === '')
         this.temp_data.title = this.change_temp.title
       if(this.temp_data.remark === '')
         this.temp_data.remark = this.change_temp.remark   
       this.temp_data.update_time = this.nowDate
+  
       // 发送请求
       changeTaskTemplate(this.change_temp.id,this.temp_data).then(() => {
         this.loadTaskTemplates()
@@ -379,8 +379,8 @@ export default {
           message:'修改成功',
           type: 'success'
         })
-      }).catch(error => {
-          console.log(error.response)
+      }).catch(() => {
+          // console.log(error.response.data)
           this.$message.error("修改失败！")
         })
       // 清空状态

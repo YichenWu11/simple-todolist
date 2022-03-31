@@ -1,7 +1,11 @@
 from rest_framework import serializers
 from app.models import Tasks, TaskTemplate, MyUser
 from django.contrib.auth import get_user_model
-from app.tasks import send_email
+from rest_framework_jwt.utils import jwt_decode_handler
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # 创建序列化器,用于实现序列化和反序列化
@@ -74,7 +78,9 @@ class TaskTemplateSerializer(serializers.ModelSerializer):
         return super(TaskTemplateSerializer, self).create(validated_data)
 
     def update(self, instance, validated_data):
-        if instance.user.username != validated_data['user']['username']:
-            raise serializers.ValidationError("非创建者进行了修改请求")
+        # token验证
+        if jwt_decode_handler(validated_data['user']['username'])['username'] != instance.user.username:
+            raise serializers.ValidationError("非创建者进行了修改请求 {}".format(validated_data))
+
         validated_data.pop("user", None)
         return super(TaskTemplateSerializer, self).update(instance, validated_data)

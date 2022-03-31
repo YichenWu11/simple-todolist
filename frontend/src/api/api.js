@@ -37,10 +37,7 @@ export const getTaskTemplates = () => axios({url:'api/template/',method:'get'})
 export const postTaskTemplate = (data) => axios({url:'api/template/',method:'post',data})
 
 // 删除模板
-export const deleteTaskTemplate = (id) => axios({url:`api/template/${id}/`, method:'delete'})
+export const deleteTaskTemplate = (id,data) => axios({url:`api/template/${id}/`, method:'delete',data})
 
 // 修改模板
 export const changeTaskTemplate = (id, data) => axios({url:`api/template/${id}/`, method:'patch', data})
-
-
-

@@ -98,7 +98,6 @@ export default {
         },
         Login() {
             login({'username':this.username, 'password':this.password}).then(response => {
-                // console.log(response.data)
                 sessionStorage.clear()
                 localStorage.token = response.data.token
                 localStorage.username = response.data.username

@@ -2,5 +2,6 @@
 def jwt_response_payload_handler(token, user=None, request=None):
     return {
         'token': token,  # 默认只返回token
-        'username': user.username
+        'username': user.username,
+        'id': user.id,
     }
