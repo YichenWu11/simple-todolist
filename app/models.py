@@ -11,6 +11,8 @@ class MyUser(AbstractUser):
         verbose_name = '用户'
 
 
+# token = Token.objects.create(user=...)
+
 # 任务
 class Tasks(models.Model):
     user = models.ForeignKey(MyUser, models.CASCADE)  # 创建人
@@ -31,7 +33,7 @@ class Tasks(models.Model):
 
 # 任务模板
 class TaskTemplate(models.Model):
-    user = models.ForeignKey(MyUser, models.CASCADE)   # 创建人
+    user = models.ForeignKey(MyUser, models.CASCADE)  # 创建人
     title = models.CharField(max_length=20)  # 模板名称
     content = JSONField()  # 模板内容 Json字符串
     remark = models.CharField(max_length=50, null=True, blank=True)  # 模板备注

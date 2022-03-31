@@ -229,7 +229,6 @@
         <li 
         v-for="(item,index) in temp_array" 
         :key="index" 
-        v-show="item.range===1 || item.user === username"
         style="list-style-type:none;margin:30px 100px 30px 120px;padding:0;">
           <el-button style="width:80%;" @click=showTasks(item)>{{ item.title }}</el-button>
         </li>
@@ -354,9 +353,7 @@ export default {
     // 获取任务列表
     loadTasks() {
       getTasks().then(response => {
-        // console.log(response.data)
         this.tableData = response.data
-        // console.log(this.tableData)
         this.tableData.forEach(function(item){
           // 处理
           let obj = {0:"未完成", 1:"已完成", 2:"延期完成", 3:"已拒绝"}
@@ -376,8 +373,6 @@ export default {
             item['create_time'] = item['create_time'].slice(0,19)
           }
         })
-        // 筛选任务
-        this.tableData = this.tableData.filter((item)=>(item.user === window.localStorage.username))
       })
     },
 

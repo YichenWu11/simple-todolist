@@ -1,8 +1,6 @@
 import time
 import logging
 
-from celery import shared_task
-
 from .models import Tasks
 import datetime
 

@@ -24,7 +24,7 @@ SECRET_KEY = 'ew5lxee_zp!1-)4r8!**dh(4+3%oh3-vmi5%jr3e**iu!))(*c'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'app',
     'corsheaders',
     'djcelery',
+    'rest_framework.authtoken'
 ]
 
 MIDDLEWARE = [

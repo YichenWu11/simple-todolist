@@ -13,6 +13,7 @@ router.register(r'myuser', views.MyUserViewSet)
 urlpatterns = [
     path(r"authorizations/", obtain_jwt_token),  # drf自带的登陆验证
     path(r"sendemail/", views.EmailView.as_view()),
+    # path(r"taskss/", views.TasksViewSet.as_view({'get': 'list'}))
 ]
 
 urlpatterns += router.urls
