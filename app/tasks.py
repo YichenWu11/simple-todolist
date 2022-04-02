@@ -32,5 +32,5 @@ def send_email(task_id):
                 message = "您的任务 " + chosen[0].content + "即将截止，请查收"
                 from_who = "2950335254@qq.com"
                 to_who = chosen[0].user.email
-                send_mail(subject, message, from_who, [to_who])
+                # send_mail(subject, message, from_who, [to_who])
     logger.info("执行成功")
